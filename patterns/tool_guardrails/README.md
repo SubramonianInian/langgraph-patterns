@@ -75,3 +75,29 @@ The validator writes `validation_errors` only. The propose node reads them on re
 export ANTHROPIC_API_KEY=...
 python -m patterns.tool_guardrails.example
 ```
+
+## Sample run
+
+Question: *"Who were the top 10 customers by revenue last quarter?"*
+
+```
+Attempts: 1
+
+[EXECUTED] SELECT c.customer_id, c.customer_name,
+           SUM(o.order_total) AS total_revenue
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id
+WHERE o.order_date >= DATE_TRUNC('quarter', CURRENT_DATE - INTERVAL '1 quarter')
+  AND o.order_date < DATE_TRUNC('quarter', CURRENT_DATE)
+GROUP BY c.customer_id, c.customer_name
+ORDER BY total_revenue DESC
+LIMIT 10
+
+Rationale: Top 10 customers by revenue last quarter via join +
+           date-range filter + aggregation + limit.
+(returned: mock 3 rows)
+```
+
+Passed on the first attempt — SELECT prefix, no semicolons, no mutation keywords, explicit `LIMIT 10` within cap. The validator is defense in depth: the model usually gets it right, but when it doesn't (prompt injection, edge cases), the guard catches it before the executor touches the database.
+
+Try the demo again with a more ambiguous question and you'll sometimes see `Attempts: 2` — the model proposed something non-compliant, the validator returned specific errors, the rewrite satisfied the policy.
