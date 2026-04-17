@@ -69,3 +69,20 @@ class State(TypedDict):
 export ANTHROPIC_API_KEY=...
 python -m patterns.reflect_retry.example
 ```
+
+## Sample run
+
+With criteria: *"3+ failure modes, one mitigation each, <200 words, no 'leverage' or 'seamless'."*
+
+```
+✓ Passed: True  |  Attempts: 2
+
+Final draft:
+# Why RAG Often Fails in Production
+1. Retrieval Quality Degradation — hybrid search + cross-encoder rerank
+2. Context Window Overflow — top 3-5 chunk selection
+3. Knowledge Gaps — audit failed queries, augment corpus
+4. Embedding Space Misalignment — domain fine-tuning
+```
+
+The first draft failed the critic (likely used a forbidden phrase or missed a criterion). The second draft, rewritten with the critic's feedback in context, passed all criteria. This is the loop doing its job — quality improves precisely because the critic's feedback is *actionable*, not vague.
