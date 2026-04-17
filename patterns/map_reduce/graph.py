@@ -13,8 +13,8 @@ import operator
 from typing import Annotated, TypedDict
 
 from langchain_core.messages import HumanMessage
-from langgraph.constants import Send
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Send
 
 from shared.llm import get_model
 from shared.prompts import load as load_prompts
