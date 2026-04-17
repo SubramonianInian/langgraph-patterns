@@ -12,6 +12,9 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, Field
 
 from shared.llm import get_model
+from shared.prompts import load as load_prompts
+
+PROMPTS = load_prompts(__file__)
 
 
 class Critique(BaseModel):
@@ -31,52 +34,24 @@ class State(TypedDict):
     passed: bool
 
 
-WRITER_PROMPT = """Write a short technical explanation of: {topic}
-
-Criteria the output MUST satisfy:
-{criteria}"""
-
-REWRITE_PROMPT = """Your previous draft failed review. Rewrite it addressing this feedback.
-
-Topic: {topic}
-
-Criteria:
-{criteria}
-
-Previous draft:
-{draft}
-
-Feedback:
-{feedback}"""
-
-CRITIC_PROMPT = """Evaluate the draft below STRICTLY against the criteria. Only pass if \
-every criterion is clearly satisfied.
-
-Criteria:
-{criteria}
-
-Draft:
-{draft}"""
-
-
 def writer(state: State) -> dict:
     model = get_model()
     if state.get("feedback"):
-        prompt = REWRITE_PROMPT.format(
+        prompt = PROMPTS["rewrite"].format(
             topic=state["topic"],
             criteria=state["criteria"],
             draft=state["draft"],
             feedback=state["feedback"],
         )
     else:
-        prompt = WRITER_PROMPT.format(topic=state["topic"], criteria=state["criteria"])
+        prompt = PROMPTS["writer"].format(topic=state["topic"], criteria=state["criteria"])
     response = model.invoke([HumanMessage(content=prompt)])
     return {"draft": response.content, "attempts": state.get("attempts", 0) + 1}
 
 
 def critic(state: State) -> dict:
     model = get_model().with_structured_output(Critique)
-    prompt = CRITIC_PROMPT.format(criteria=state["criteria"], draft=state["draft"])
+    prompt = PROMPTS["critic"].format(criteria=state["criteria"], draft=state["draft"])
     critique = model.invoke([HumanMessage(content=prompt)])
     return {
         "passed": critique.passes,

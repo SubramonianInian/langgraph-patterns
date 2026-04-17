@@ -1,0 +1,29 @@
+writer: |
+  Write a short technical explanation of: {topic}
+
+  Criteria the output MUST satisfy:
+  {criteria}
+
+rewrite: |
+  Your previous draft failed review. Rewrite it addressing this feedback.
+
+  Topic: {topic}
+
+  Criteria:
+  {criteria}
+
+  Previous draft:
+  {draft}
+
+  Feedback:
+  {feedback}
+
+critic: |
+  Evaluate the draft below STRICTLY against the criteria. Only pass if
+  every criterion is clearly satisfied.
+
+  Criteria:
+  {criteria}
+
+  Draft:
+  {draft}
