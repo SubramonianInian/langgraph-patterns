@@ -70,3 +70,23 @@ The `Annotated[..., operator.add]` is the key trick: each worker returns `{"find
 export ANTHROPIC_API_KEY=...
 python -m patterns.map_reduce.example
 ```
+
+## Sample run
+
+Three code snippets analyzed through a *performance* lens — workers run in parallel, then a synthesizer consolidates.
+
+```
+🔍 Per-snippet findings:
+
+[1] total(items)   — O(N), minimal allocation; sum() would be slightly faster
+[2] dedup(items)   — O(N²) due to `i not in out`; use a set-based approach
+[3] load_users()   — N+1 queries + SQL injection; batch with IN () clause
+
+Consolidated synthesis:
+- N+1 query patterns → batch with IN clauses
+- Linear searches in loops → set-based lookups
+- Repeated .append() → built-ins (sum, dict.fromkeys)
+- Profile I/O first, then algorithms, then micro-opts
+```
+
+Three workers fanned out in parallel (one per snippet), results accumulated through `operator.add` on the `findings` list, the synthesizer saw all three at once. The fan-out width is just `len(items)` — scale to 30 the same way.
