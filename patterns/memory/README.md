@@ -74,3 +74,24 @@ The `LongTermMemory` interface exposes only `read(user_id, query, k)` and `write
 export ANTHROPIC_API_KEY=...
 python -m patterns.memory.example
 ```
+
+## Sample run
+
+```
+── Session 1 ──
+user: I'm allergic to shellfish, and I'm planning a trip to Lisbon next month.
+bot:  That's exciting! Lisbon is a wonderful destination. Since you're
+      allergic to shellfish, ... [safe-dining tips for Portugal] ...
+
+Long-term store now holds:
+  ['User has a shellfish allergy',
+   'User is planning a trip to Lisbon next month']
+
+── Session 2 (later) ──
+user: Recommend a restaurant for my trip.
+bot:  I'd love to help you find a great restaurant in Lisbon! ... any
+      dietary restrictions I should know about besides your shellfish
+      allergy? ...
+```
+
+In session 2 the user says *"my trip"* with no other context — but the bot knows it's **Lisbon** and remembers the **shellfish allergy**, without the user repeating either. The extract node wrote durable facts after session 1; the recall node surfaced them into session 2's prompt.
