@@ -13,6 +13,9 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, Field
 
 from shared.llm import get_model
+from shared.prompts import load as load_prompts
+
+PROMPTS = load_prompts(__file__)
 
 
 class Plan(BaseModel):
@@ -32,14 +35,7 @@ class State(TypedDict):
 def planner(state: State) -> dict:
     model = get_model().with_structured_output(Plan)
     plan = model.invoke(
-        [
-            HumanMessage(
-                content=(
-                    f"Break this objective into 3-6 concrete steps. Each step must be an\n"
-                    f"action someone can execute on its own.\n\nObjective: {state['objective']}"
-                )
-            )
-        ]
+        [HumanMessage(content=PROMPTS["planner"].format(objective=state["objective"]))]
     )
     return {"plan": plan.steps, "current_step": 0, "step_outputs": []}
 
@@ -50,10 +46,8 @@ def executor(state: State) -> dict:
         f"Step {i + 1}: {s}\n→ {o}"
         for i, (s, o) in enumerate(zip(state["plan"], state["step_outputs"]))
     )
-    prompt = (
-        f"Objective: {state['objective']}\n\n"
-        f"Completed so far:\n{prior or '(none)'}\n\n"
-        f"Execute this next step and return only its output:\n{step}"
+    prompt = PROMPTS["executor"].format(
+        objective=state["objective"], prior=prior or "(none)", step=step
     )
     response = get_model().invoke([HumanMessage(content=prompt)])
     return {
@@ -67,10 +61,8 @@ def synthesize(state: State) -> dict:
         f"Step {i + 1}: {s}\n{o}"
         for i, (s, o) in enumerate(zip(state["plan"], state["step_outputs"]))
     )
-    prompt = (
-        f"Objective: {state['objective']}\n\n"
-        f"Execution transcript:\n{transcript}\n\n"
-        "Synthesize a single final answer that fulfills the objective."
+    prompt = PROMPTS["synthesize"].format(
+        objective=state["objective"], transcript=transcript
     )
     response = get_model().invoke([HumanMessage(content=prompt)])
     return {"final": response.content}

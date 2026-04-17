@@ -1,0 +1,22 @@
+planner: |
+  Break this objective into 3-6 concrete steps. Each step must be an
+  action someone can execute on its own.
+
+  Objective: {objective}
+
+executor: |
+  Objective: {objective}
+
+  Completed so far:
+  {prior}
+
+  Execute this next step and return only its output:
+  {step}
+
+synthesize: |
+  Objective: {objective}
+
+  Execution transcript:
+  {transcript}
+
+  Synthesize a single final answer that fulfills the objective.
