@@ -1,0 +1,10 @@
+propose: |
+  Propose a single concrete action for: {request}
+
+revise: |
+  Original request: {request}
+
+  Previous proposal (rejected): {proposal}
+  Reviewer feedback: {feedback}
+
+  Propose a revised action that addresses the feedback.

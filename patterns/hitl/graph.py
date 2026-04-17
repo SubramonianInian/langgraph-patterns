@@ -17,6 +17,9 @@ from langgraph.types import interrupt
 from pydantic import BaseModel, Field
 
 from shared.llm import get_model
+from shared.prompts import load as load_prompts
+
+PROMPTS = load_prompts(__file__)
 
 
 class Proposal(BaseModel):
@@ -36,7 +39,7 @@ class State(TypedDict):
 def propose(state: State) -> dict:
     model = get_model().with_structured_output(Proposal)
     prop = model.invoke(
-        [HumanMessage(content=f"Propose a single concrete action for: {state['request']}")]
+        [HumanMessage(content=PROMPTS["propose"].format(request=state["request"]))]
     )
     return {"proposal": prop.action, "rationale": prop.rationale}
 
@@ -62,11 +65,10 @@ def execute(state: State) -> dict:
 
 def revise(state: State) -> dict:
     model = get_model().with_structured_output(Proposal)
-    prompt = (
-        f"Original request: {state['request']}\n\n"
-        f"Previous proposal (rejected): {state['proposal']}\n"
-        f"Reviewer feedback: {state['human_feedback']}\n\n"
-        "Propose a revised action that addresses the feedback."
+    prompt = PROMPTS["revise"].format(
+        request=state["request"],
+        proposal=state["proposal"],
+        feedback=state["human_feedback"],
     )
     prop = model.invoke([HumanMessage(content=prompt)])
     return {"proposal": prop.action, "rationale": prop.rationale}
