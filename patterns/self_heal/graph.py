@@ -16,6 +16,9 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import END, START, StateGraph
 
 from shared.llm import get_model
+from shared.prompts import load as load_prompts
+
+PROMPTS = load_prompts(__file__)
 
 
 class ToolError(RuntimeError):
@@ -61,7 +64,7 @@ def primary(state: State) -> dict:
     except ToolError as e:
         return {"attempts": attempts + [f"primary-failed: {e}"]}
     response = get_model().invoke(
-        [HumanMessage(content=f"Answer using only:\n{evidence}\n\nQuestion: {state['query']}")]
+        [HumanMessage(content=PROMPTS["answer"].format(evidence=evidence, query=state["query"]))]
     )
     return {
         "attempts": attempts,
@@ -77,7 +80,7 @@ def secondary(state: State) -> dict:
     except ToolError as e:
         return {"attempts": attempts + [f"secondary-failed: {e}"]}
     response = get_model().invoke(
-        [HumanMessage(content=f"Answer using only:\n{evidence}\n\nQuestion: {state['query']}")]
+        [HumanMessage(content=PROMPTS["answer"].format(evidence=evidence, query=state["query"]))]
     )
     return {
         "attempts": attempts,

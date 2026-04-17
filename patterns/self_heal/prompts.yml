@@ -1,0 +1,5 @@
+answer: |
+  Answer using only:
+  {evidence}
+
+  Question: {query}
