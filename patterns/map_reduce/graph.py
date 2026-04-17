@@ -17,6 +17,9 @@ from langgraph.constants import Send
 from langgraph.graph import END, START, StateGraph
 
 from shared.llm import get_model
+from shared.prompts import load as load_prompts
+
+PROMPTS = load_prompts(__file__)
 
 
 class WorkerInput(TypedDict):
@@ -37,35 +40,15 @@ def dispatcher(state: State) -> list[Send]:
 
 
 def worker(inp: WorkerInput) -> dict:
-    model = get_model()
-    response = model.invoke(
-        [
-            HumanMessage(
-                content=(
-                    f"Analyze this item through the lens of: {inp['theme']}\n\n"
-                    f"Item:\n{inp['item']}\n\n"
-                    "Return one short paragraph of findings."
-                )
-            )
-        ]
-    )
+    prompt = PROMPTS["worker"].format(theme=inp["theme"], item=inp["item"])
+    response = get_model().invoke([HumanMessage(content=prompt)])
     return {"findings": [response.content]}
 
 
 def synthesizer(state: State) -> dict:
-    model = get_model()
     joined = "\n\n".join(f"- {f}" for f in state["findings"])
-    response = model.invoke(
-        [
-            HumanMessage(
-                content=(
-                    f"Theme: {state['theme']}\n\n"
-                    f"Per-item findings:\n{joined}\n\n"
-                    "Synthesize a single consolidated summary (bullet list of cross-cutting points)."
-                )
-            )
-        ]
-    )
+    prompt = PROMPTS["synthesizer"].format(theme=state["theme"], findings=joined)
+    response = get_model().invoke([HumanMessage(content=prompt)])
     return {"synthesis": response.content}
 
 

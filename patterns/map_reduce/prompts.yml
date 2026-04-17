@@ -1,0 +1,15 @@
+worker: |
+  Analyze this item through the lens of: {theme}
+
+  Item:
+  {item}
+
+  Return one short paragraph of findings.
+
+synthesizer: |
+  Theme: {theme}
+
+  Per-item findings:
+  {findings}
+
+  Synthesize a single consolidated summary (bullet list of cross-cutting points).
