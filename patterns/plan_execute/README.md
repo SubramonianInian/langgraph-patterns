@@ -69,3 +69,26 @@ Invariant: `len(step_outputs) == current_step` at every point after the planner 
 export ANTHROPIC_API_KEY=...
 python -m patterns.plan_execute.example
 ```
+
+## Sample run
+
+Objective: *"Produce a one-page migration brief for moving a monolithic Node.js API to a modular service-oriented architecture on Azure."*
+
+```
+📋 Plan:
+  1. Audit the existing monolithic API to identify distinct business domains
+     and functional modules that can be separated into independent services.
+  2. Design the target service-oriented architecture by mapping each module
+     to a microservice, including boundaries, comms, and Azure deployment.
+  3. Evaluate and document technical requirements (databases, scaling,
+     API gateway, inter-service communication).
+  4. Produce the one-page brief summarizing current state, target architecture,
+     benefits, resources, and a phased timeline.
+  5. Review the brief for accuracy, completeness, and clarity.
+
+Final brief:
+# MIGRATION BRIEF: MONOLITHIC → MODULAR SERVICE-ORIENTED ARCHITECTURE
+... [multi-section executive brief with phases, budgets, risks, approvals]
+```
+
+Each step sees the outputs of all earlier steps — the synthesizer then folds the full transcript into a single coherent deliverable. The visible plan (editable, replayable) is the whole point of the pattern.
