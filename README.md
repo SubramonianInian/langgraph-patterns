@@ -74,6 +74,22 @@ See [`shared/llm.py`](shared/llm.py) for the one-line factory.
 
 ---
 
+## 🧬 Composing patterns
+
+Patterns aren't silos — each one compiles to a LangGraph graph, and a graph can be a **node inside another graph**. The real leverage comes from nesting.
+
+Concrete compositions worth stealing:
+
+- **Router → Reflect & Retry.** Supervisor dispatches to a specialist; each specialist is itself a reflect-retry loop. You get both *the right expert* and *vetted output*.
+- **Plan → Execute with HITL gates.** Planner emits steps; every step is paused for human review before the executor runs it. Auditable agents for high-stakes workflows.
+- **Map-Reduce of Tool Guardrails.** Fan out N parallel tool-call proposals (different angles on the same question), validate each independently, reduce the surviving results. Parallel breadth with per-branch safety.
+- **Memory wrapping anything.** Add a recall node before any pattern's entry point and an extract node at its exit. Instant personalization for any agent.
+- **Self-Heal around a composed agent.** Treat your whole Plan → Execute + Memory agent as the "primary" in the self-heal chain; degrade to a simpler direct-answer path if it fails.
+
+Rule of thumb: **if a node starts looking like a god-node, extract its logic into a pattern and nest it.** State flows through cleanly because each pattern owns a small, named subset of the parent state.
+
+---
+
 ## 🎯 Design philosophy
 
 1. **A pattern should fit in your head.** If the graph needs more than one diagram, it's two patterns.
