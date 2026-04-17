@@ -69,3 +69,21 @@ The supervisor writes only `route` and `route_reason`. Specialists write only `a
 export ANTHROPIC_API_KEY=...
 python -m patterns.router.example
 ```
+
+## Sample run
+
+```
+Q: My React effect runs twice on mount — what's going on?
+→ Routed to: debugging
+  (The user is experiencing unexpected behavior and needs help diagnosing the root cause.)
+
+Q: Should I use a message bus or direct HTTP calls between my two new services?
+→ Routed to: design
+  (Architectural trade-offs between two communication patterns — a system design decision.)
+
+Q: Can you review this Python function? `def f(xs): return [x for x in xs if x != None]`
+→ Routed to: code_review
+  (The user is explicitly asking for a review of existing code quality and style.)
+```
+
+Each specialist then produces its full answer. Routing decisions are deterministic thanks to structured output — the `route_reason` makes every dispatch auditable.
