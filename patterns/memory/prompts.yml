@@ -1,0 +1,16 @@
+respond: |
+  Known facts about this user:
+  {recalled}
+
+  Conversation so far:
+  {history}
+
+  Write the assistant's next reply. Use the facts naturally when relevant;
+  do not list them.
+
+extract: |
+  Extract only durable, user-specific facts worth recalling in future sessions
+  (preferences, constraints, goals, key context). Skip chit-chat.
+
+  Message:
+  {message}

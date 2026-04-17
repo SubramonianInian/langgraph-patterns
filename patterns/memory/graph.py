@@ -11,12 +11,15 @@ back to long-term memory for future turns.
 
 from typing import TypedDict
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import HumanMessage
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, Field
 
 from patterns.memory.store import STORE
 from shared.llm import get_model
+from shared.prompts import load as load_prompts
+
+PROMPTS = load_prompts(__file__)
 
 
 class FactExtraction(BaseModel):
@@ -49,12 +52,7 @@ def recall(state: State) -> dict:
 def respond(state: State) -> dict:
     recalled = "\n".join(f"- {m}" for m in state["recalled"]) or "(no prior facts)"
     history = "\n".join(f"{m['role']}: {m['content']}" for m in state["messages"])
-    prompt = (
-        f"Known facts about this user:\n{recalled}\n\n"
-        f"Conversation so far:\n{history}\n\n"
-        "Write the assistant's next reply. Use the facts naturally when relevant; "
-        "do not list them."
-    )
+    prompt = PROMPTS["respond"].format(recalled=recalled, history=history)
     response = get_model().invoke([HumanMessage(content=prompt)])
     return {"response": response.content}
 
@@ -63,15 +61,7 @@ def extract(state: State) -> dict:
     last_user = state["messages"][-1]["content"]
     model = get_model().with_structured_output(FactExtraction)
     result = model.invoke(
-        [
-            HumanMessage(
-                content=(
-                    "Extract only durable, user-specific facts worth recalling in future sessions "
-                    "(preferences, constraints, goals, key context). Skip chit-chat.\n\n"
-                    f"Message:\n{last_user}"
-                )
-            )
-        ]
+        [HumanMessage(content=PROMPTS["extract"].format(message=last_user))]
     )
     for fact in result.facts:
         STORE.write(state["user_id"], fact)
