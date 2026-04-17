@@ -12,6 +12,9 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, Field
 
 from shared.llm import get_model
+from shared.prompts import load as load_prompts
+
+PROMPTS = load_prompts(__file__)
 
 Specialist = Literal["code_review", "debugging", "design"]
 
@@ -28,48 +31,32 @@ class State(TypedDict):
     answer: str | None
 
 
-SUPERVISOR_PROMPT = """You are a routing supervisor. Classify the engineering question below \
-into one of: code_review, debugging, design.
-
-- code_review: requests to review or improve existing code quality
-- debugging: requests to diagnose why something isn't working
-- design: architectural or system-design questions
-
-Question:
-{question}"""
-
-
 def supervisor(state: State) -> dict:
     model = get_model().with_structured_output(RouteDecision)
     decision = model.invoke(
-        [HumanMessage(content=SUPERVISOR_PROMPT.format(question=state["question"]))]
+        [HumanMessage(content=PROMPTS["supervisor"].format(question=state["question"]))]
     )
     return {"route": decision.specialist, "route_reason": decision.reason}
 
 
-def _specialist(persona: str, state: State) -> dict:
-    model = get_model()
-    response = model.invoke(
-        [HumanMessage(content=f"{persona}\n\nRespond to:\n{state['question']}")]
+def _specialist(role: Specialist, state: State) -> dict:
+    prompt = PROMPTS["specialist"].format(
+        persona=PROMPTS["personas"][role], question=state["question"]
     )
+    response = get_model().invoke([HumanMessage(content=prompt)])
     return {"answer": response.content}
 
 
 def code_review_specialist(state: State) -> dict:
-    return _specialist("You are a senior code reviewer. Be specific and cite patterns.", state)
+    return _specialist("code_review", state)
 
 
 def debugging_specialist(state: State) -> dict:
-    return _specialist(
-        "You are a debugging expert. Work through hypotheses methodically before concluding.",
-        state,
-    )
+    return _specialist("debugging", state)
 
 
 def design_specialist(state: State) -> dict:
-    return _specialist(
-        "You are a software architect. Name tradeoffs explicitly; avoid hand-waving.", state
-    )
+    return _specialist("design", state)
 
 
 def _route(state: State) -> str:
