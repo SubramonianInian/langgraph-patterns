@@ -71,3 +71,30 @@ The `interrupt()` call inside `human_review` surfaces `{proposal, rationale}` to
 export ANTHROPIC_API_KEY=...
 python -m patterns.hitl.example
 ```
+
+## Sample run
+
+```
+▶  Starting graph...
+
+⏸  Graph paused — awaiting human review
+   Proposal:  Send a team-wide email outlining the new API rate-limit
+              thresholds, effective date, and mitigation strategies.
+   Rationale: Broad visibility, essential details in one place, clear
+              guidance on how to adapt.
+
+👤 Human rejects with feedback: 'Tone is too corporate, make it friendlier.'
+
+⏸  Graph paused — awaiting human review
+   Proposal:  Send a friendly team message announcing the API rate-limit
+              changes with a conversational tone, new limits, effective
+              date, and practical tips to help services adapt smoothly.
+   Rationale: Adopts an approachable, peer-to-peer tone while keeping all
+              essential information.
+
+👤 Human approves the revised proposal.
+
+✅ Final: EXECUTED: Send a friendly team message announcing...
+```
+
+The graph paused durably twice. Each resume (`Command(resume={...})`) injected the human's decision and revived execution from the exact interrupt point — the checkpointer makes this survive process restarts.

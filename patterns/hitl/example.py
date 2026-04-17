@@ -11,14 +11,15 @@ from langgraph.types import Command
 from patterns.hitl.graph import build_graph
 
 
-def _print_interrupt(event: dict) -> None:
-    for v in event.values():
-        if isinstance(v, list):
-            for item in v:
-                if hasattr(item, "value"):
-                    print(f"\n⏸  Graph paused — awaiting human review")
-                    print(f"   Proposal:  {item.value.get('proposal')}")
-                    print(f"   Rationale: {item.value.get('rationale')}")
+def _show_pending(graph, config) -> None:
+    """Print whatever the graph is waiting on the caller to provide."""
+    state = graph.get_state(config)
+    for task in state.tasks:
+        for interrupt in task.interrupts:
+            payload = interrupt.value
+            print(f"\n⏸  Graph paused — awaiting human review")
+            print(f"   Proposal:  {payload.get('proposal')}")
+            print(f"   Rationale: {payload.get('rationale')}")
 
 
 def main() -> None:
@@ -35,23 +36,23 @@ def main() -> None:
     }
 
     print("▶  Starting graph...")
-    for event in graph.stream(initial, config):
-        _print_interrupt(event)
+    graph.invoke(initial, config)
+    _show_pending(graph, config)
 
     print("\n👤 Human rejects with feedback: 'Tone is too corporate, make it friendlier.'")
-    for event in graph.stream(
-        Command(resume={"approved": False, "feedback": "Tone is too corporate, make it friendlier."}),
+    graph.invoke(
+        Command(
+            resume={"approved": False, "feedback": "Tone is too corporate, make it friendlier."}
+        ),
         config,
-    ):
-        _print_interrupt(event)
+    )
+    _show_pending(graph, config)
 
     print("\n👤 Human approves the revised proposal.")
-    final_state = None
-    for event in graph.stream(Command(resume={"approved": True}), config):
-        final_state = event
+    graph.invoke(Command(resume={"approved": True}), config)
 
-    state = graph.get_state(config).values
-    print(f"\n✅ Final: {state['final']}")
+    final = graph.get_state(config).values
+    print(f"\n✅ Final: {final['final']}")
 
 
 if __name__ == "__main__":
