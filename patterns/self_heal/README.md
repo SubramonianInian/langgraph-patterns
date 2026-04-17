@@ -78,3 +78,27 @@ class State(TypedDict):
 export ANTHROPIC_API_KEY=...
 python -m patterns.self_heal.example
 ```
+
+## Sample run
+
+Three calls to a deliberately flaky "primary" (90% failure rate) — you'll see the fallback chain exercise different tiers.
+
+```
+Q: what is RAG?
+→ Served from: primary
+→ Path: primary
+→ Response: primary-result ... [full LLM answer]
+
+Q: what is RAG?
+→ Served from: primary
+→ Path: primary
+→ Response: primary-result ... [full LLM answer]
+
+Q: what is RAG?
+→ Served from: secondary
+→ Path: primary → primary-failed: 503 Service Unavailable → secondary
+→ Response: secondary-result ...
+            (served from secondary source — may be less fresh)
+```
+
+When the primary fails, the path in state shows *exactly* what happened: which tier failed, why, and which tier served the answer. The response text is honest about the degradation — the user knows they got a backup answer, not a fresh one.
