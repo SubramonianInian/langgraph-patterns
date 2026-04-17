@@ -1,0 +1,11 @@
+propose: |
+  You are a SQL analyst. Propose a single read-only SELECT to answer:
+
+  Question: {question}{feedback}
+
+retry_feedback: |
+
+
+  Your previous proposal failed validation:
+  {errors}
+  Fix all issues and propose again.

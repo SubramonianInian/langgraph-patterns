@@ -17,6 +17,9 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, Field, ValidationError
 
 from shared.llm import get_model
+from shared.prompts import load as load_prompts
+
+PROMPTS = load_prompts(__file__)
 
 
 class SqlQuery(BaseModel):
@@ -43,16 +46,11 @@ class State(TypedDict):
 def propose_tool_call(state: State) -> dict:
     feedback = ""
     if state.get("validation_errors"):
-        feedback = (
-            f"\nYour previous proposal failed validation:\n"
-            + "\n".join(f"- {e}" for e in state["validation_errors"])
-            + "\nFix all issues and propose again."
+        feedback = PROMPTS["retry_feedback"].format(
+            errors="\n".join(f"- {e}" for e in state["validation_errors"])
         )
     model = get_model().with_structured_output(SqlQuery)
-    prompt = (
-        "You are a SQL analyst. Propose a single read-only SELECT to answer:\n\n"
-        f"Question: {state['question']}{feedback}"
-    )
+    prompt = PROMPTS["propose"].format(question=state["question"], feedback=feedback)
     try:
         proposal = model.invoke([HumanMessage(content=prompt)])
     except ValidationError as e:
