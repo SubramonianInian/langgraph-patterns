@@ -78,8 +78,9 @@ See [`shared/llm.py`](shared/llm.py) for the one-line factory.
 
 1. **A pattern should fit in your head.** If the graph needs more than one diagram, it's two patterns.
 2. **State is a contract.** Each pattern declares a `TypedDict` state; nodes read and write to it explicitly. No hidden side effects.
-3. **Fail loudly in development, gracefully in production.** Every pattern has a `max_attempts` / timeout / fallback where it matters.
-4. **Measurable before clever.** Patterns expose the signals you'd want to log: which node fired, how many retries, why a route was chosen.
+3. **Prompts live next to code, not inside it.** Every pattern keeps its prompts in `prompts.yml` alongside `graph.py` — editable without Python knowledge, diffable in git, portable when a folder is copied into another project.
+4. **Fail loudly in development, gracefully in production.** Every pattern has a `max_attempts` / timeout / fallback where it matters.
+5. **Measurable before clever.** Patterns expose the signals you'd want to log: which node fired, how many retries, why a route was chosen.
 
 ---
 
